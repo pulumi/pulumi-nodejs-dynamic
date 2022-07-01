@@ -14,10 +14,11 @@
 
 import * as pulumi from "@pulumi/pulumi";
 import * as utilities from "./utilities";
+import * as provider from "./provider";
 
-const providerCache = new WeakMap<pulumi.provider.Provider, Promise<string>>();
+const providerCache = new WeakMap<provider.DynamicProvider, Promise<string>>();
 
-function serializeProvider(provider: pulumi.provider.Provider): Promise<string> {
+function serializeProvider(provider: provider.DynamicProvider): Promise<string> {
   let result: Promise<string>;
   const cachedProvider = providerCache.get(provider);
   if (cachedProvider) {
@@ -30,7 +31,8 @@ function serializeProvider(provider: pulumi.provider.Provider): Promise<string> 
 }
 
 /**
- * Resource represents a Pulumi Resource that incorporates an inline implementation of the Resource's CRUD operations.
+ * DynamicResource represents a Pulumi Resource that incorporates an inline implementation of the Resource's
+ * CRUD operations.
  */
 export abstract class DynamicResource extends pulumi.CustomResource {
   /**
@@ -43,7 +45,7 @@ export abstract class DynamicResource extends pulumi.CustomResource {
    * @param opts A bag of options that control this resource's behavior.
    */
   constructor(
-    provider: pulumi.provider.Provider,
+    provider: provider.DynamicProvider,
     type: string,
     name: string,
     props: pulumi.Inputs,

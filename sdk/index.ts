@@ -13,3 +13,4 @@
 // limitations under the License.
 
 export * from "./resource";
+export * from "./provider";

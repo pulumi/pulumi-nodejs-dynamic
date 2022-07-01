@@ -26,6 +26,11 @@ func TestSimple(t *testing.T) {
 		With(integration.ProgramTestOptions{
 			RunUpdateTest: false,
 			Dir:           filepath.Join(getCwd(t), "simple"),
+			Config: map[string]string{
+				"simple:config:w": "1",
+				"simple:config:x": "1",
+				"simple:config:y": "1",
+			},
 		})
 
 	integration.ProgramTest(t, &test)
