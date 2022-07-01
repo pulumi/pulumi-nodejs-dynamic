@@ -1,23 +1,23 @@
-.idea
-.code
-**/vendor/
 .pulumi
-**/bin/
-**/obj/
-Pulumi.*.yaml
-**/node_modules/
+bin
+obj
+node_modules
+nuget
+awsx/coverage
+vendor/
+**/Pulumi.*.yaml
+**/yarn-error.log
+yarn.lock
+package-lock.json
+.idea/
+**/version.txt
+**/dist
 .DS_Store
 
-**/command-output/
+ci-scripts/
+*.tar.gz
 
-.idea/
-*.iml
+**/venv
 
-yarn.lock
-**/pulumiManifest.go
-
-ci-scripts
-provider/**/schema.go
-**/version.txt
-**/nuget
-**/dist
+!/cmd/yarn.lock
+!/sdk/yarn.lock
