@@ -59,7 +59,7 @@ publish() {
     # no way to say "if the package already exists, don't fail" but we want these
     # semantics (so, for example, we can restart builds which may have failed after
     # publishing, or so two builds can run concurrently, which is the case for when we
-    # tag master right after pushing a new commit and the push and tag travis jobs both
+    # tag main right after pushing a new commit and the push and tag travis jobs both
     # get the same version.
     #
     # We exploit the fact that `npm info <package-name>@<package-version>` has no output

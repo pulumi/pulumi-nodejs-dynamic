@@ -321,13 +321,13 @@ jobs:
           - 16.x
         pythonversion:
           - "3.7"
-name: master
+name: main
 "on":
   schedule:
     - cron: '0 7 * * *'
   push:
     branches:
-      - master
+      - main
     paths-ignore:
       - CHANGELOG.md
     tags-ignore:
