@@ -1,3 +1,8 @@
+name: artifact cleanup
+on:
+  schedule:
+    - cron: 0 1 * * *
+
 jobs:
   remove-old-artifacts:
     runs-on: ubuntu-latest
@@ -7,7 +12,3 @@ jobs:
         with:
           age: 1 month
           skip-tags: true
-name: cleanup
-"on":
-  schedule:
-    - cron: 0 1 * * *

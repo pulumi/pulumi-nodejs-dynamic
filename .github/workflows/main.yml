@@ -1,17 +1,27 @@
+
+name: main
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - CHANGELOG.md
+    tags-ignore:
+      - v*
+      - sdk/*
+      - '**'
 env:
-  AWS_REGION: us-west-2
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   LOCAL_PLAT: linux-amd64
   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-  NUGET_PUBLISH_KEY: ${{ secrets.NUGET_PUBLISH_KEY }}
   PROVIDER: nodejs-dynamic
   PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
   PULUMI_API: https://api.pulumi-staging.io
   PULUMI_GO_DEP_ROOT: ${{ github.workspace }}/..
   SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-  PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-  PULUMI_LOCAL_NUGET: ${{ github.workspace }}/nuget
   VERSION_PREFIX: 1.0.0
 jobs:
   lint:
@@ -37,12 +47,8 @@ jobs:
         with:
           node-version: 16.x
           registry-url: https://registry.npmjs.org
-      - name: Install Yarn
-        run: curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.13.0
-      - name: Update PATH for Yarn
-        run: |
-          echo "$HOME/.yarn/bin" >> $GITHUB_PATH
-          echo "$HOME/.config/yarn/global/node_modules/.bin" >> $GITHUB_PATH
+          cache: yarn
+          cache-dependency-path: '**/package.json'
       - name: Lint code
         run: make lint
       - name: Check worktree clean
@@ -138,18 +144,6 @@ jobs:
         with:
           node-version: ${{matrix.nodeversion}}
           registry-url: https://registry.npmjs.org
-      - name: Setup Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{matrix.pythonversion}}
-      - name: Setup DotNet
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: ${{matrix.dotnetversion}}
-      - name: Install Python deps
-        run: |-
-          pip3 install virtualenv==20.0.23
-          pip3 install pipenv
       - name: Download bin
         uses: actions/download-artifact@v3
         with:
@@ -160,49 +154,31 @@ jobs:
           chmod +x bin/*
           make provider --touch
       - name: Build SDK
-        run: make build_${{ matrix.language }}
+        run: make build_sdk
       - name: Check worktree clean
         run: ./ci-scripts/ci/check-worktree-is-clean
       - name: Compress SDK folder
-        run: tar -zcf sdk/${{ matrix.language }}.tar.gz -C sdk/${{ matrix.language }}
+        run: tar -zcf sdk.tar.gz -C sdk
           .
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.language  }}-sdk.tar.gz
-          path: ${{ github.workspace}}/sdk/${{ matrix.language }}.tar.gz
+          name: sdk.tar.gz
+          path: ${{ github.workspace}}/sdk.tar.gz
       - name: Install gotestfmt
         uses: jaxxstorm/action-install-gh-release@v1.2.0
         with:
           repo: haveyoudebuggedit/gotestfmt
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-region: ${{ env.AWS_REGION }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          role-duration-seconds: 3600
-          role-session-name: ${{ env.PROVIDER }}@githubActions
-          role-to-assume: ${{ secrets.AWS_CI_ROLE_ARN }}
       - name: Run tests
         # Tell make to not rebuild the provider bin
-        run: make test_${{ matrix.language }}
+        run: make test_sdk
     strategy:
       fail-fast: false
       matrix:
         goversion:
           - 1.17.x
-        dotnetversion:
-          - 3.1
-        pythonversion:
-          - 3.8
         nodeversion:
           - 16.x
-        language:
-          - nodejs
-          - python
-          - dotnet
-          - go
   publish:
     name: publish
     needs: acceptance-test
@@ -289,16 +265,3 @@ jobs:
           - 1.17.x
         nodeversion:
           - 16.x
-name: main
-"on":
-  schedule:
-    - cron: '0 7 * * *'
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - CHANGELOG.md
-    tags-ignore:
-      - v*
-      - sdk/*
-      - '**'
