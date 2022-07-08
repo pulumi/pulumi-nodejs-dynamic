@@ -164,18 +164,6 @@ jobs:
         with:
           node-version: ${{matrix.nodeversion}}
           registry-url: https://registry.npmjs.org
-      - name: Setup Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{matrix.pythonversion}}
-      - name: Setup DotNet
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: ${{matrix.dotnetversion}}
-      - name: Install Python deps
-        run: |-
-          pip3 install virtualenv==20.0.23
-          pip3 install pipenv
       - name: Download bin
         uses: actions/download-artifact@v3
         with:
@@ -201,15 +189,6 @@ jobs:
         uses: jaxxstorm/action-install-gh-release@v1.2.0
         with:
           repo: haveyoudebuggedit/gotestfmt
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-region: ${{ env.AWS_REGION }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          role-duration-seconds: 3600
-          role-session-name: ${{ env.PROVIDER }}@githubActions
-          role-to-assume: ${{ secrets.AWS_CI_ROLE_ARN }}
       - name: Run tests
         # Tell make to not rebuild the provider bin
         run: make test_${{ matrix.language }}
@@ -218,15 +197,10 @@ jobs:
       matrix:
         goversion:
           - 1.17.x
-        pythonversion:
-          - 3.8
         nodeversion:
           - 16.x
         language:
           - nodejs
-          - python
-          - dotnet
-          - go
 name: Run Acceptance Tests from PR
 on:
   repository_dispatch:
