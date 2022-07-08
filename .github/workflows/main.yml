@@ -49,6 +49,8 @@ jobs:
           registry-url: https://registry.npmjs.org
           cache: yarn
           cache-dependency-path: '**/package.json'
+      - name: Install yarn
+        run: npm install -g yarn
       - name: Lint code
         run: make lint
       - name: Check worktree clean
@@ -72,14 +74,12 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v2
         with:
-          node-version: ${{matrix.nodeversion}}
+          node-version: 16.x
           registry-url: https://registry.npmjs.org
-      - name: Install Yarn
-        run: curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.13.0
-      - name: Update PATH for Yarn
-        run: |
-          echo "$HOME/.yarn/bin" >> $GITHUB_PATH
-          echo "$HOME/.config/yarn/global/node_modules/.bin" >> $GITHUB_PATH
+          cache: yarn
+          cache-dependency-path: '**/package.json'
+      - name: Install yarn
+        run: npm install -g yarn
       - name: Install pulumictl
         uses: jaxxstorm/action-install-gh-release@v1.1.0
         with:
