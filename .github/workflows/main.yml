@@ -251,6 +251,11 @@ jobs:
           always-auth: true
           registry-url: https://registry.npmjs.org
           node-version: ${{matrix.nodeversion}}
+      - name: Download SDK
+        uses: actions/download-artifact@v2
+        with:
+          name: sdk.tar.gz
+          path: ${{ github.workspace}}/sdk/
       - name: Uncompress SDK
         run: tar -zxf ${{github.workspace}}/sdk.tar.gz -C ${{github.workspace}}/sdk
       - env:
