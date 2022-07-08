@@ -28,7 +28,7 @@ jobs:
       - name: Unshallow clone for tags
         run: git fetch --prune --unshallow --tags
       - name: Install pulumictl
-        uses: jaxxstorm/action-install-gh-release@v1.1.0
+        uses: jaxxstorm/action-install-gh-release@1.7.1
         with:
           repo: pulumi/pulumictl
       - name: Setup Node
@@ -74,7 +74,7 @@ jobs:
           echo "$HOME/.yarn/bin" >> $GITHUB_PATH
           echo "$HOME/.config/yarn/global/node_modules/.bin" >> $GITHUB_PATH
       - name: Install pulumictl
-        uses: jaxxstorm/action-install-gh-release@v1.1.0
+        uses: jaxxstorm/action-install-gh-release@1.7.1
         with:
           repo: pulumi/pulumictl
       - name: Install Pulumi CLI
@@ -123,7 +123,7 @@ jobs:
       - name: Unshallow clone for tags
         run: git fetch --prune --unshallow --tags
       - name: Install pulumictl
-        uses: jaxxstorm/action-install-gh-release@v1.1.0
+        uses: jaxxstorm/action-install-gh-release@1.7.1
         with:
           repo: pulumi/pulumictl
       - name: Install Pulumi CLI
@@ -159,7 +159,7 @@ jobs:
           name: ${{ matrix.language  }}-sdk.tar.gz
           path: ${{ github.workspace}}/sdk/${{ matrix.language }}.tar.gz
       - name: Install gotestfmt
-        uses: jaxxstorm/action-install-gh-release@v1.2.0
+        uses: jaxxstorm/action-install-gh-release@1.7.1
         with:
           repo: haveyoudebuggedit/gotestfmt
       - name: Run tests
@@ -187,7 +187,7 @@ jobs:
         with:
           tag: v2.1.5-procursus2
       - name: Install pulumictl
-        uses: jaxxstorm/action-install-gh-release@v1.1.0
+        uses: jaxxstorm/action-install-gh-release@1.7.1
         with:
           repo: pulumi/pulumictl
       - name: Install Pulumi CLI
@@ -229,7 +229,7 @@ jobs:
       - name: Unshallow clone for tags
         run: git fetch --prune --unshallow --tags
       - name: Install pulumictl
-        uses: jaxxstorm/action-install-gh-release@v1.1.0
+        uses: jaxxstorm/action-install-gh-release@1.7.1
         with:
           repo: pulumi/pulumictl
       - name: Install Pulumi CLI
@@ -297,7 +297,7 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v2
       - name: Install pulumictl
-        uses: jaxxstorm/action-install-gh-release@v1.2.0
+        uses: jaxxstorm/action-install-gh-release@1.7.1
         with:
           repo: pulumi/pulumictl
       - name: Add SDK version tag
@@ -309,7 +309,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install pulumictl
-        uses: jaxxstorm/action-install-gh-release@v1.1.0
+        uses: jaxxstorm/action-install-gh-release@1.7.1
         with:
           repo: pulumi/pulumictl
       - env:

@@ -17,7 +17,6 @@ env:
   LOCAL_PLAT: linux-amd64
   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-  PROVIDER: nodejs-dynamic
   PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
   PULUMI_API: https://api.pulumi-staging.io
   PULUMI_GO_DEP_ROOT: ${{ github.workspace }}/..
@@ -39,7 +38,7 @@ jobs:
       - name: Unshallow clone for tags
         run: git fetch --prune --unshallow --tags
       - name: Install pulumictl
-        uses: jaxxstorm/action-install-gh-release@v1.1.0
+        uses: jaxxstorm/action-install-gh-release@1.7.1
         with:
           repo: pulumi/pulumictl
       - name: Setup Node
@@ -81,7 +80,7 @@ jobs:
       - name: Install yarn
         run: npm install -g yarn
       - name: Install pulumictl
-        uses: jaxxstorm/action-install-gh-release@v1.1.0
+        uses: jaxxstorm/action-install-gh-release@v1.7.1
         with:
           repo: pulumi/pulumictl
       - name: Install Pulumi CLI
@@ -96,11 +95,11 @@ jobs:
           name: bin
           path: bin
       - name: Tar provider bin
-        run: tar -zcf ${{ github.workspace }}/provider.tar.gz -C ${{ github.workspace }}/${{ env.PROVIDER }}/bin/ .
+        run: tar -zcf ${{ github.workspace }}/provider.tar.gz -C ${{ github.workspace }}/bin/ .
       - name: Upload provider bin
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ env.PROVIDER }}-provider.tar.gz
+          name: nodejs-dynamic-provider.tar.gz
           path: ${{ github.workspace }}/provider.tar.gz
       - if: failure() && github.event_name == 'push'
         name: Notify Slack
@@ -130,7 +129,7 @@ jobs:
       - name: Unshallow clone for tags
         run: git fetch --prune --unshallow --tags
       - name: Install pulumictl
-        uses: jaxxstorm/action-install-gh-release@v1.1.0
+        uses: jaxxstorm/action-install-gh-release@1.7.1
         with:
           repo: pulumi/pulumictl
       - name: Install Pulumi CLI
@@ -166,7 +165,7 @@ jobs:
           name: sdk.tar.gz
           path: ${{ github.workspace}}/sdk.tar.gz
       - name: Install gotestfmt
-        uses: jaxxstorm/action-install-gh-release@v1.2.0
+        uses: jaxxstorm/action-install-gh-release@1.7.1
         with:
           repo: haveyoudebuggedit/gotestfmt
       - name: Run tests
@@ -188,21 +187,11 @@ jobs:
         uses: actions/checkout@v2
       - name: Unshallow clone for tags
         run: git fetch --prune --unshallow --tags
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-region: us-east-2
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          role-duration-seconds: 3600
-          role-external-id: upload-pulumi-release
-          role-session-name: ${{ env.PROVIDER}}@githubActions
-          role-to-assume: ${{ secrets.AWS_UPLOAD_ROLE_ARN }}
       - uses: MOZGIII/install-ldid-action@v1
         with:
           tag: v2.1.5-procursus2
       - name: Install pulumictl
-        uses: jaxxstorm/action-install-gh-release@v1.1.0
+        uses: jaxxstorm/action-install-gh-release@1.7.1
         with:
           repo: pulumi/pulumictl
       - name: Install Pulumi CLI
@@ -210,13 +199,13 @@ jobs:
       - name: Download provider binary
         uses: actions/download-artifact@v2
         with:
-          name: ${{ env.PROVIDER }}-provider.tar.gz
+          name: nodejs-dynamic-provider.tar.gz
           path: ${{ github.workspace }}/bin
       - name: Untar provider binaries
         run: tar -zxf ${{ github.workspace }}/bin/provider.tar.gz -C ${{ github.workspace
           }}/bin
       - name: Restore binary perms
-        run: find ${{ github.workspace }}/bin -name "pulumi-*-${{ env.PROVIDER }}" -print
+        run: find ${{ github.workspace }}/bin -name "pulumi-resource-nodejs-dynamic" -print
           -exec chmod +x {} \;
       - name: Create Provider Binaries
         run: make test_provider dist
@@ -237,7 +226,7 @@ jobs:
       - name: Unshallow clone for tags
         run: git fetch --prune --unshallow --tags
       - name: Install pulumictl
-        uses: jaxxstorm/action-install-gh-release@v1.1.0
+        uses: jaxxstorm/action-install-gh-release@1.7.1
         with:
           repo: pulumi/pulumictl
       - name: Install Pulumi CLI
