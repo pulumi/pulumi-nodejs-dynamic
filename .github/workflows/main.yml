@@ -255,7 +255,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: sdk.tar.gz
-          path: ${{ github.workspace}}/sdk.tar.gz
+          path: ${{ github.workspace}}
       - name: Uncompress SDK
         run: tar -zxf ${{github.workspace}}/sdk.tar.gz -C ${{github.workspace}}/sdk
       - env:
