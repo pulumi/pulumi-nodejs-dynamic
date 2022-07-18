@@ -160,7 +160,7 @@ jobs:
           repo: haveyoudebuggedit/gotestfmt
       - name: Run tests
         # Tell make to not rebuild the provider bin
-        run: make test_${{ matrix.language }}
+        run: make test_sdk
     strategy:
       fail-fast: false
       matrix:
