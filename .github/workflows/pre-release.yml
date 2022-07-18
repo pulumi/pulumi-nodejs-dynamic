@@ -1,18 +1,18 @@
+
+name: prerelease
+on:
+  push:
+    tags:
+      - v*.*.*-**
 env:
-  AWS_REGION: us-west-2
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   LOCAL_PLAT: linux-amd64
   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-  NUGET_PUBLISH_KEY: ${{ secrets.NUGET_PUBLISH_KEY }}
-  PROVIDER: nodejs-dynamic
   PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
   PULUMI_API: https://api.pulumi-staging.io
   PULUMI_GO_DEP_ROOT: ${{ github.workspace }}/..
   SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-  PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-  PULUMI_LOCAL_NUGET: ${{ github.workspace }}/nuget
-  IS_PRERELEASE: true
 jobs:
   lint:
     name: lint
@@ -37,12 +37,10 @@ jobs:
         with:
           node-version: 16.x
           registry-url: https://registry.npmjs.org
-      - name: Install Yarn
-        run: curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.13.0
-      - name: Update PATH for Yarn
-        run: |
-          echo "$HOME/.yarn/bin" >> $GITHUB_PATH
-          echo "$HOME/.config/yarn/global/node_modules/.bin" >> $GITHUB_PATH
+          cache: yarn
+          cache-dependency-path: '**/package.json'
+      - name: Install yarn
+        run: npm install -g yarn
       - name: Lint code
         run: make lint
       - name: Check worktree clean
@@ -66,14 +64,12 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v2
         with:
-          node-version: ${{matrix.nodeversion}}
+          node-version: 16.x
           registry-url: https://registry.npmjs.org
-      - name: Install Yarn
-        run: curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.13.0
-      - name: Update PATH for Yarn
-        run: |
-          echo "$HOME/.yarn/bin" >> $GITHUB_PATH
-          echo "$HOME/.config/yarn/global/node_modules/.bin" >> $GITHUB_PATH
+          cache: yarn
+          cache-dependency-path: '**/package.json'
+      - name: Install yarn
+        run: npm install -g yarn
       - name: Install pulumictl
         uses: jaxxstorm/action-install-gh-release@v1.7.1
         with:
@@ -90,11 +86,11 @@ jobs:
           name: bin
           path: bin
       - name: Tar provider bin
-        run: tar -zcf ${{ github.workspace }}/provider.tar.gz -C ${{ github.workspace }}/${{ env.PROVIDER }}/bin/ .
+        run: tar -zcf ${{ github.workspace }}/provider.tar.gz -C ${{ github.workspace }}/bin/ .
       - name: Upload provider bin
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ env.PROVIDER }}-provider.tar.gz
+          name: nodejs-dynamic-provider.tar.gz
           path: ${{ github.workspace }}/provider.tar.gz
       - if: failure() && github.event_name == 'push'
         name: Notify Slack
@@ -148,30 +144,20 @@ jobs:
           chmod +x bin/*
           make provider --touch
       - name: Build SDK
-        run: make build_${{ matrix.language }}
+        run: make build_sdk
       - name: Check worktree clean
         run: ./ci-scripts/ci/check-worktree-is-clean
       - name: Compress SDK folder
-        run: tar -zcf sdk/${{ matrix.language }}.tar.gz -C sdk/${{ matrix.language }}
-          .
+        run: tar -zcf sdk.tar.gz -C sdk .
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.language  }}-sdk.tar.gz
-          path: ${{ github.workspace}}/sdk/${{ matrix.language }}.tar.gz
+          name: sdk.tar.gz
+          path: ${{ github.workspace}}/sdk.tar.gz
       - name: Install gotestfmt
         uses: jaxxstorm/action-install-gh-release@v1.7.1
         with:
           repo: haveyoudebuggedit/gotestfmt
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-region: ${{ env.AWS_REGION }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          role-duration-seconds: 3600
-          role-session-name: ${{ env.PROVIDER }}@githubActions
-          role-to-assume: ${{ secrets.AWS_CI_ROLE_ARN }}
       - name: Run tests
         # Tell make to not rebuild the provider bin
         run: make test_${{ matrix.language }}
@@ -182,8 +168,6 @@ jobs:
           - 1.17.x
         nodeversion:
           - 16.x
-        language:
-          - nodejs
   publish:
     name: publish
     needs: acceptance-test
@@ -193,6 +177,16 @@ jobs:
         uses: actions/checkout@v2
       - name: Unshallow clone for tags
         run: git fetch --prune --unshallow --tags
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-region: us-east-2
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-duration-seconds: 3600
+          role-external-id: upload-pulumi-release
+          role-session-name: ${{ env.PROVIDER}}@githubActions
+          role-to-assume: ${{ secrets.AWS_UPLOAD_ROLE_ARN }}
       - uses: MOZGIII/install-ldid-action@v1
         with:
           tag: v2.1.5-procursus2
@@ -205,13 +199,13 @@ jobs:
       - name: Download provider binary
         uses: actions/download-artifact@v2
         with:
-          name: ${{ env.PROVIDER }}-provider.tar.gz
+          name: nodejs-dynamic-provider.tar.gz
           path: ${{ github.workspace }}/bin
       - name: Untar provider binaries
         run: tar -zxf ${{ github.workspace }}/bin/provider.tar.gz -C ${{ github.workspace
           }}/bin
       - name: Restore binary perms
-        run: find ${{ github.workspace }}/bin -name "pulumi-*-${{ env.PROVIDER }}" -print
+        run: find ${{ github.workspace }}/bin -name "pulumi-resource-nodejs-dynamic" -print
           -exec chmod +x {} \;
       - name: Create Provider Binaries
         run: make test_provider dist
@@ -255,14 +249,13 @@ jobs:
           always-auth: true
           registry-url: https://registry.npmjs.org
           node-version: ${{matrix.nodeversion}}
-      - name: Download nodejs SDK
+      - name: Download SDK
         uses: actions/download-artifact@v2
         with:
-          name: nodejs-sdk.tar.gz
-          path: ${{ github.workspace}}/sdk/
-      - name: Uncompress nodejs SDK
-        run: tar -zxf ${{github.workspace}}/sdk/nodejs.tar.gz -C ${{github.workspace}}/sdk/nodejs
-      - run: python -m pip install pip twine
+          name: sdk.tar.gz
+          path: ${{ github.workspace}}
+      - name: Uncompress SDK
+        run: tar -zxf ${{github.workspace}}/sdk.tar.gz -C ${{github.workspace}}/sdk
       - env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         name: Publish SDK
@@ -272,28 +265,5 @@ jobs:
       matrix:
         goversion:
           - 1.17.x
-        dotnetversion:
-          - 3.1
         nodeversion:
           - 16.x
-        pythonversion:
-          - "3.7"
-  tag_sdk:
-    name: tag_sdk
-    needs: publish_sdk
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v2
-      - name: Install pulumictl
-        uses: jaxxstorm/action-install-gh-release@v1.7.1
-        with:
-          repo: pulumi/pulumictl
-      - name: Add SDK version tag
-        run: git tag sdk/v$(pulumictl get version --language generic) && git push origin
-          sdk/v$(pulumictl get version --language generic)
-name: prerelease
-on:
-  push:
-    tags:
-      - v*.*.*-**

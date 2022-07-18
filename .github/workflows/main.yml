@@ -21,7 +21,6 @@ env:
   PULUMI_API: https://api.pulumi-staging.io
   PULUMI_GO_DEP_ROOT: ${{ github.workspace }}/..
   SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-  VERSION_PREFIX: 1.0.0
 jobs:
   lint:
     name: lint
@@ -157,8 +156,7 @@ jobs:
       - name: Check worktree clean
         run: ./ci-scripts/ci/check-worktree-is-clean
       - name: Compress SDK folder
-        run: tar -zcf sdk.tar.gz -C sdk
-          .
+        run: tar -zcf sdk.tar.gz -C sdk .
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
