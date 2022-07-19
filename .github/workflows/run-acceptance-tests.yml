@@ -169,9 +169,7 @@ jobs:
           name: bin
           path: bin
       - name: Restore bin and avoid rebuilding
-        run: |
-          chmod +x bin/*
-          make provider --touch
+        run: chmod +x bin/*
       - name: Build SDK
         run: make build_${{ matrix.language }}
       - name: Check worktree clean
