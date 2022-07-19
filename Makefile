@@ -9,7 +9,8 @@ PROVIDER        := pulumi-resource-${PACK}
 GZIP_PREFIX		:= pulumi-resource-${PACK}-v${VERSION}
 BIN				:= ${PROVIDER}
 
-NODEJS_DYNAMIC_SRC 		:= $(wildcard cmd/*.*) $(wildcard cmd/*/*.ts)
+PROVIDER_SRC 	:= $(wildcard cmd/*.*) $(wildcard cmd/*/*.ts)
+SDK_SRC 		:= $(wildcard sdk/*.*) $(wildcard sdk/*/*.ts)
 
 WORKING_DIR     := $(shell pwd)
 
@@ -21,11 +22,11 @@ PKG_ARGS 		:= --no-bytecode --public-packages "*" --public
 
 all:: lint provider build_sdk test_provider
 
-cmd/node_modules: cmd/package.json cmd/yarn.lock
+cmd/node_modules: cmd/package.json cmd/yarn.lock sdk/bin
 	yarn install --cwd cmd --no-progress
 	@touch cmd/node_modules
 
-cmd/bin: cmd/node_modules ${NODEJS_DYNAMIC_SRC}
+cmd/bin: cmd/node_modules ${PROVIDER_SRC}
 	@cd cmd && \
 		yarn tsc && \
 		cp package.json ./bin/ && \
@@ -65,50 +66,50 @@ sdk/node_modules: sdk/package.json sdk/yarn.lock
 	yarn install --cwd sdk --no-progress
 	@touch sdk/node_modules
 
-sdk/bin:: VERSION := $(shell pulumictl get version --language javascript)
-sdk/bin::
+sdk/bin: VERSION := $(shell pulumictl get version --language javascript)
+sdk/bin: sdk/node_modules ${SDK_SRC}
 	cd sdk && \
-		yarn install --no-progress && \
-		yarn run tsc --version && \
 		yarn run tsc && \
 		sed -e 's/\$${VERSION}/$(VERSION)/g' < package.json > bin/package.json && \
 		cp ../README.md ../LICENSE bin/
 
 # Phony targets
 
-build_sdk:: sdk/bin
+build_provider: cmd/bin
+
+build_sdk: sdk/bin
 
 install_provider: bin/${PROVIDER}
 	rm -f ${GOBIN}/${PROVIDER}
 	cp bin/${PROVIDER} ${GOBIN}/${PROVIDER}
 
-install_sdk:: sdk/bin
+install_sdk: sdk/bin
 	yarn link --cwd $(WORKING_DIR)/sdk/bin
 
-lint_proivder:: cmd/node_modules
+lint_provider: cmd/node_modules
 	cd cmd && \
 		yarn format && yarn lint
 
-lint_sdk:: sdk/node_modules
+lint_sdk: sdk/node_modules
 	cd sdk && \
 		yarn format && yarn lint
 
-lint:: lint_proivder lint_sdk
+lint: lint_provider lint_sdk
 
-test_provider:: cmd/node_modules
+test_provider: cmd/node_modules
 	cd cmd && yarn test
 
-istanbul_tests::
+istanbul_tests:
 	cd cmd/tests && \
 		yarn && yarn run build && yarn run mocha $$(find bin -name '*.spec.js')
 
-test_sdk:: PATH := $(WORKING_DIR)/bin:$(PATH)
-test_sdk:: bin/${PROVIDER} install_sdk
+test_sdk: PATH := $(WORKING_DIR)/bin:$(PATH)
+test_sdk: bin/${PROVIDER} install_sdk
 	@export PATH
 	cd examples && go test -tags=nodejs -v -json -count=1 -cover -timeout 3h -parallel ${TESTPARALLELISM} . 2>&1 | tee /tmp/gotest.log | gotestfmt
 
-test:: PATH := $(WORKING_DIR)/bin:$(PATH)
-test::
+test: PATH := $(WORKING_DIR)/bin:$(PATH)
+test:
 	@export PATH
 	@if [ -z "${Test}" ]; then \
 		cd examples && go test -v -json -count=1 -cover -timeout 3h -parallel ${TESTPARALLELISM} . 2>&1 | tee /tmp/gotest.log | gotestfmt; \
@@ -126,8 +127,8 @@ dist:: dist/${GZIP_PREFIX}-windows-amd64.tar.gz
 clean:
 	rm -rf bin dist cmd/bin cmd/node_modules sdk/node_modules
 
-build:: provider test_provider build_sdk
+build: provider test_provider build_sdk
 
-dev:: lint test_provider build_sdk
+dev: lint test_provider build_sdk
 
-.PHONY: clean provider install_sdk dist
+.PHONY: clean provider install_sdk install_provider dist build dev test test_sdk istanbul_tests test_provider lint lint_sdk lint_provider

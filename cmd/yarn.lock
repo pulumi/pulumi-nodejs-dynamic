@@ -1296,7 +1296,12 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==
 
-"@pulumi/pulumi@3.34.0-alpha.1653429916":
+"@pulumi/dynamic@../sdk/bin":
+  version "1.1.0-alpha.1658228382"
+  dependencies:
+    "@pulumi/pulumi" "^3.0.0"
+
+"@pulumi/pulumi@3.34.0-alpha.1653429916", "@pulumi/pulumi@^3.0.0":
   version "3.34.0-alpha.1653429916"
   resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-3.34.0-alpha.1653429916.tgz#0f52cfe03f52dfebdbdd4c6eb03e9ec1e1a8f423"
   integrity sha512-TAhr/kxOqKHW6rdrGoIBYx5FiO8ShcxDYKoFrWL4xLGJJv/PB0SoEUumXQe7qOiw4fsJ1RGlh7PJbmny67hDQQ==

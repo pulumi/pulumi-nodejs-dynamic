@@ -13,13 +13,14 @@
 // limitations under the License.
 
 import * as pulumi from "@pulumi/pulumi";
+import * as dynamic from "@pulumi/dynamic";
 const requireFromString = require("require-from-string");
 
 const providerKey: string = "__provider";
 
-const providerCache: { [key: string]: pulumi.provider.Provider } = {};
+const providerCache: { [key: string]: dynamic.DynamicProvider } = {};
 
-function getProvider(props: any): pulumi.provider.Provider {
+function getProvider(props: any): dynamic.DynamicProvider {
   const providerString = props[providerKey];
   let provider: any = providerCache[providerString];
   if (!provider) {
@@ -49,7 +50,7 @@ class Provider implements pulumi.provider.Provider {
         failures: [],
       };
     }
-    return provider.check(urn, olds, news);
+    return provider.check(olds, news);
   }
 
   async diff(id: string, urn: string, olds: any, news: any): Promise<pulumi.provider.DiffResult> {
@@ -65,7 +66,7 @@ class Provider implements pulumi.provider.Provider {
     if (provider.diff === undefined) {
       return {};
     }
-    return provider.diff(id, urn, olds, news);
+    return provider.diff(id, olds, news);
   }
 
   async create(urn: string, inputs: any): Promise<pulumi.provider.CreateResult> {
@@ -75,7 +76,7 @@ class Provider implements pulumi.provider.Provider {
     }
     // Ensure to propagate the special __provider value too, so that the provider's CRUD operations continue
     // to function after a refresh.
-    const result = await provider.create(urn, inputs);
+    const result = await provider.create(inputs);
     return {
       id: result.id,
       outs: resultIncludingProvider(result.outs, inputs),
@@ -94,7 +95,7 @@ class Provider implements pulumi.provider.Provider {
     }
     // Ensure to propagate the special __provider value too, so that the provider's CRUD operations continue
     // to function after a refresh.
-    const result = await provider.update(id, urn, olds, news);
+    const result = await provider.update(id, olds, news);
     return {
       outs: resultIncludingProvider(result.outs, news),
     };
@@ -104,7 +105,7 @@ class Provider implements pulumi.provider.Provider {
     const provider = getProvider(props);
     // In the event of a missing delete, simply do nothing.
     if (provider.delete !== undefined) {
-      return provider.delete(id, urn, props);
+      return provider.delete(id, props);
     }
   }
 
@@ -120,7 +121,7 @@ class Provider implements pulumi.provider.Provider {
 
     // If there's a read function, consult the provider. Ensure to propagate the special __provider value too,
     // so that the provider's CRUD operations continue to function after a refresh.
-    const result = await provider.read(id, urn, props);
+    const result = await provider.read(id, props);
     return {
       id: result.id,
       props: resultIncludingProvider(result.props, props),

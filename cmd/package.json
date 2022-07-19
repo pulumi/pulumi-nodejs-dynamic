@@ -17,7 +17,8 @@
     "tsc": "tsc --incremental"
   },
   "dependencies": {
-    "@pulumi/pulumi": "3.34.0-alpha.1653429916"
+    "@pulumi/pulumi": "3.34.0-alpha.1653429916",
+    "@pulumi/dynamic": "../sdk/bin"
   },
   "devDependencies": {
     "@babel/core": "^7.17.9",

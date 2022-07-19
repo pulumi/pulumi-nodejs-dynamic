@@ -51,15 +51,15 @@ export abstract class DynamicResource extends pulumi.CustomResource {
     props: pulumi.Inputs,
     opts?: pulumi.CustomResourceOptions,
   ) {
-    const providerKey: string = "__provider";
+    const providerKey = "__provider";
+    props = props || {};
     if (props[providerKey]) {
       throw new Error("A dynamic resource must not define the __provider key");
     }
     props[providerKey] = serializeProvider(provider);
 
-    opts = opts || {};
-    opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts);
+    opts = opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts);
 
-    super("pulumi-nodejs:dynamic:" + type, name, props, opts);
+    super("nodejs-dynamic:index:" + type, name, props, opts);
   }
 }
