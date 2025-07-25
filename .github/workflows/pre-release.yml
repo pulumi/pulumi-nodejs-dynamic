@@ -1,4 +1,4 @@
-
+permissions: write-all # Equivalent to default permissions plus id-token: write
 name: prerelease
 on:
   push:
@@ -7,19 +7,23 @@ on:
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   LOCAL_PLAT: linux-amd64
-  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-  PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
   PULUMI_API: https://api.pulumi-staging.io
   PULUMI_GO_DEP_ROOT: ${{ github.workspace }}/..
-  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
   IS_PRERELEASE: true
+  ESC_ACTION_OIDC_AUTH: true
+  ESC_ACTION_OIDC_ORGANIZATION: pulumi
+  ESC_ACTION_OIDC_REQUESTED_TOKEN_TYPE: urn:pulumi:token-type:access_token:organization
+  ESC_ACTION_ENVIRONMENT: imports/github-secrets
+  ESC_ACTION_EXPORT_ENVIRONMENT_VARIABLES: NODE_AUTH_TOKEN=NPM_TOKEN,NPM_TOKEN,PULUMI_ACCESS_TOKEN,SLACK_WEBHOOK_URL
 jobs:
   lint:
     name: lint
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
+      - name: Fetch secrets from ESC
+        id: esc-secrets
+        uses: pulumi/esc-action@v1
       - name: Checkout Repo
         uses: actions/checkout@v2
       - name: Checkout Scripts Repo
@@ -49,6 +53,9 @@ jobs:
   build-provider:
     runs-on: ubuntu-latest
     steps:
+      - name: Fetch secrets from ESC
+        id: esc-secrets
+        uses: pulumi/esc-action@v1
       - name: Checkout Repo
         uses: actions/checkout@v2
       - name: Checkout Scripts Repo
@@ -111,6 +118,9 @@ jobs:
     needs: build-provider
     runs-on: ubuntu-latest
     steps:
+      - name: Fetch secrets from ESC
+        id: esc-secrets
+        uses: pulumi/esc-action@v1
       - name: Checkout Repo
         uses: actions/checkout@v2
       - name: Checkout Scripts Repo
@@ -172,6 +182,9 @@ jobs:
     needs: acceptance-test
     runs-on: ubuntu-latest
     steps:
+      - name: Fetch secrets from ESC
+        id: esc-secrets
+        uses: pulumi/esc-action@v1
       - name: Checkout Repo
         uses: actions/checkout@v2
       - name: Unshallow clone for tags
@@ -185,7 +198,7 @@ jobs:
           role-duration-seconds: 3600
           role-external-id: upload-pulumi-release
           role-session-name: ${{ env.PROVIDER}}@githubActions
-          role-to-assume: ${{ secrets.AWS_UPLOAD_ROLE_ARN }}
+          role-to-assume: ${{ steps.esc-secrets.outputs.AWS_UPLOAD_ROLE_ARN }}
       - uses: MOZGIII/install-ldid-action@v1
         with:
           tag: v2.1.5-procursus2
@@ -201,11 +214,9 @@ jobs:
           name: nodejs-dynamic-provider.tar.gz
           path: ${{ github.workspace }}/bin
       - name: Untar provider binaries
-        run: tar -zxf ${{ github.workspace }}/bin/provider.tar.gz -C ${{ github.workspace
-          }}/bin
+        run: tar -zxf ${{ github.workspace }}/bin/provider.tar.gz -C ${{ github.workspace }}/bin
       - name: Restore binary perms
-        run: find ${{ github.workspace }}/bin -name "pulumi-resource-nodejs-dynamic" -print
-          -exec chmod +x {} \;
+        run: find ${{ github.workspace }}/bin -name "pulumi-resource-nodejs-dynamic" -print -exec chmod +x {} \;
       - name: Create Provider Binaries
         run: make test_provider dist
       - name: Upload Provider Binaries
@@ -217,12 +228,15 @@ jobs:
           files: |
             dist/*.tar.gz
         env:
-          GITHUB_TOKEN: ${{ secrets.PULUMI_BOT_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.esc-secrets.outputs.PULUMI_BOT_TOKEN }}
   publish_sdk:
     name: publish_sdk
     needs: publish
     runs-on: ubuntu-latest
     steps:
+      - name: Fetch secrets from ESC
+        id: esc-secrets
+        uses: pulumi/esc-action@v1
       - name: Checkout Repo
         uses: actions/checkout@v2
       - name: Checkout Scripts Repo
@@ -256,7 +270,7 @@ jobs:
       - name: Uncompress SDK
         run: tar -zxf ${{github.workspace}}/sdk.tar.gz -C ${{github.workspace}}/sdk
       - env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ steps.esc-secrets.outputs.NPM_TOKEN }}
         name: Publish SDK
         run: ./scripts/publish_packages.sh
     strategy:
