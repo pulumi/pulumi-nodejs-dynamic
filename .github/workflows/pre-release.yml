@@ -82,14 +82,14 @@ jobs:
       - name: Check worktree clean
         run: ./ci-scripts/ci/check-worktree-is-clean
       - name: Upload bin
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: bin
           path: bin
       - name: Tar provider bin
         run: tar -zcf ${{ github.workspace }}/provider.tar.gz -C ${{ github.workspace }}/bin/ .
       - name: Upload provider bin
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: nodejs-dynamic-provider.tar.gz
           path: ${{ github.workspace }}/provider.tar.gz
@@ -136,7 +136,7 @@ jobs:
           node-version: ${{matrix.nodeversion}}
           registry-url: https://registry.npmjs.org
       - name: Download bin
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: bin
           path: bin
@@ -149,7 +149,7 @@ jobs:
       - name: Compress SDK folder
         run: tar -zcf sdk.tar.gz -C sdk .
       - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: sdk.tar.gz
           path: ${{ github.workspace}}/sdk.tar.gz
@@ -196,7 +196,7 @@ jobs:
       - name: Install Pulumi CLI
         uses: pulumi/action-install-pulumi-cli@v1.0.1
       - name: Download provider binary
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: nodejs-dynamic-provider.tar.gz
           path: ${{ github.workspace }}/bin
@@ -249,7 +249,7 @@ jobs:
           registry-url: https://registry.npmjs.org
           node-version: ${{matrix.nodeversion}}
       - name: Download SDK
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: sdk.tar.gz
           path: ${{ github.workspace}}
